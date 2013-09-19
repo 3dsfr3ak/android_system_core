@@ -222,6 +222,7 @@ on post-fs-data
     mkdir /data/misc/bluetooth 0770 system system
     mkdir /data/misc/keystore 0700 keystore keystore
     mkdir /data/misc/keychain 0771 system system
+    mkdir /data/misc/radio 0770 system radio
     mkdir /data/misc/sms 0770 system radio
     mkdir /data/misc/zoneinfo 0775 system system
     mkdir /data/misc/vpn 0770 system vpn
@@ -279,7 +280,7 @@ on post-fs-data
     #setprop vold.post_fs_data_done 1
 
 # Include extra init file
-    import /init.slim.rc
+    import /init.cm.rc
 
 on boot
     # interactive governor
@@ -330,9 +331,6 @@ on boot
     chmod 0664 /sys/devices/system/cpu/cpu0/cpufreq/scaling_max_freq
     chown system system /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
     chmod 0664 /sys/devices/system/cpu/cpu0/cpufreq/scaling_min_freq
-
-# Run sysinit
-    start sysinit
 
 # basic network init
     ifup lo
@@ -459,6 +457,12 @@ on boot
 
 # Set this property so surfaceflinger is not started by system_init
     setprop system_init.startsurfaceflinger 0
+
+# Start ADB before init.d so we can see errors    
+    start adbd
+
+# Start the init.d service
+    exec /system/bin/sysinit
 
     class_start core
     class_start main
@@ -630,8 +634,4 @@ service mdnsd /system/bin/mdnsd
     group inet net_raw
     socket mdnsd stream 0660 mdnsr inet
     disabled
-    oneshot
-
-service sysinit /system/bin/sysinit
-    user root
     oneshot
